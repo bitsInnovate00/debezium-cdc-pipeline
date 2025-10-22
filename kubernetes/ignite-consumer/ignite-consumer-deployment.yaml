@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ignite-consumer
+  namespace: debezium-pipeline
+  labels:
+    app: ignite-consumer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ignite-consumer
+  template:
+    metadata:
+      labels:
+        app: ignite-consumer
+    spec:
+      containers:
+      - name: ignite-consumer
+        # Build this image using: docker build -t ignite-consumer:1.0 ./ignite-consumer
+        # For local testing with minikube: eval $(minikube docker-env) then build
+        image: ignite-consumer:1.0
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka-service:9092"
+        - name: KAFKA_TOPIC
+          value: "dbserver1.public.customers"
+        - name: KAFKA_GROUP_ID
+          value: "ignite-consumer-group"
+        - name: IGNITE_ADDRESS
+          value: "ignite-service:10800"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - pgrep
+            - java
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - pgrep
+            - java
+          initialDelaySeconds: 20
+          periodSeconds: 5

@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ignite-config
+  namespace: debezium-pipeline
+data:
+  ignite-config.json: |
+    {
+      "node": {
+        "name": "ignite-node",
+        "network": {
+          "port": 10800,
+          "portRange": 100,
+          "shutdownQuietPeriod": 0,
+          "shutdownTimeout": 15000
+        }
+      },
+      "cluster": {
+        "name": "debezium-ignite-cluster"
+      },
+      "rest": {
+        "port": 10300,
+        "dualProtocol": false
+      }
+    }

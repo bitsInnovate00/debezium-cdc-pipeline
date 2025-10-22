@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: debezium-pipeline
+  labels:
+    name: debezium-pipeline
+    app: cdc-pipeline

@@ -1,0 +1,22 @@
+# Note: This is a template configuration for Ignite sink connector
+# Apache Ignite 3 doesn't have an official Kafka Connect sink connector yet
+# You'll need to either:
+# 1. Create a custom Kafka Connect sink connector for Ignite 3
+# 2. Use a Kafka consumer application to write to Ignite 3
+# 3. Wait for official Ignite 3 Kafka Connect support
+
+# For now, we'll create a custom consumer application approach
+# See the ignite-consumer directory for implementation
+
+{
+  "name": "ignite-sink-connector",
+  "config": {
+    "connector.class": "org.apache.kafka.connect.sink.SinkConnector",
+    "tasks.max": "1",
+    "topics": "dbserver1.public.customers",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": "true",
+    "value.converter.schemas.enable": "true"
+  }
+}

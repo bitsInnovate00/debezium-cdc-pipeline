@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka-connect
+  namespace: debezium-pipeline
+  labels:
+    app: kafka-connect
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka-connect
+  template:
+    metadata:
+      labels:
+        app: kafka-connect
+    spec:
+      containers:
+      - name: kafka-connect
+        image: debezium/connect:2.4
+        ports:
+        - containerPort: 8083
+          name: rest-api
+        env:
+        - name: BOOTSTRAP_SERVERS
+          value: "kafka-service:9092"
+        - name: GROUP_ID
+          value: "debezium-cluster"
+        - name: CONFIG_STORAGE_TOPIC
+          value: "debezium_configs"
+        - name: OFFSET_STORAGE_TOPIC
+          value: "debezium_offsets"
+        - name: STATUS_STORAGE_TOPIC
+          value: "debezium_statuses"
+        - name: CONFIG_STORAGE_REPLICATION_FACTOR
+          value: "1"
+        - name: OFFSET_STORAGE_REPLICATION_FACTOR
+          value: "1"
+        - name: STATUS_STORAGE_REPLICATION_FACTOR
+          value: "1"
+        - name: CONNECT_KEY_CONVERTER
+          value: "org.apache.kafka.connect.json.JsonConverter"
+        - name: CONNECT_VALUE_CONVERTER
+          value: "org.apache.kafka.connect.json.JsonConverter"
+        - name: CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE
+          value: "true"
+        - name: CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE
+          value: "true"
+        - name: CONNECT_INTERNAL_KEY_CONVERTER
+          value: "org.apache.kafka.connect.json.JsonConverter"
+        - name: CONNECT_INTERNAL_VALUE_CONVERTER
+          value: "org.apache.kafka.connect.json.JsonConverter"
+        - name: CONNECT_REST_ADVERTISED_HOST_NAME
+          value: "kafka-connect-service"
+        - name: CONNECT_PLUGIN_PATH
+          value: "/kafka/connect"
+        - name: CONNECT_LOG4J_ROOT_LOGLEVEL
+          value: "INFO"
+        - name: CONNECT_LOG4J_LOGGERS
+          value: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 8083
+          initialDelaySeconds: 90
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 8083
+          initialDelaySeconds: 60
+          periodSeconds: 5
