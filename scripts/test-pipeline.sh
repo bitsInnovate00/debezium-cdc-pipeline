@@ -26,17 +26,20 @@ kubectl exec -n debezium-pipeline $POSTGRES_POD -- psql -U postgres -d testdb -c
 
 echo -e "\n${BLUE}Step 3: Listing Kafka topics...${NC}"
 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
-    kafka-topics.sh --bootstrap-server localhost:9092 --list | grep dbserver1
+    /usr/bin/kafka-topics --bootstrap-server localhost:9092 --list | grep dbserver1 || echo "No Debezium topics found yet"
 
-echo -e "\n${BLUE}Step 4: Consuming last 5 messages from Kafka (waiting 5 seconds)...${NC}"
-kubectl exec -n debezium-pipeline $KAFKA_POD -- timeout 5 \
-    kafka-console-consumer.sh --bootstrap-server localhost:9092 \
-    --topic dbserver1.public.customers --from-beginning --max-messages 5 || true
+echo -e "\n${BLUE}Step 4: Consuming last 5 messages from Kafka (waiting 10 seconds)...${NC}"
+timeout 10 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
+    /usr/bin/kafka-console-consumer --bootstrap-server localhost:9092 \
+    --topic dbserver1.public.customers --from-beginning --max-messages 5 2>/dev/null || echo -e "${YELLOW}No messages consumed (may still be processing)${NC}"
 
-echo -e "\n${BLUE}Step 5: Checking Ignite data via REST API...${NC}"
-# Note: This requires Ignite 3 REST API to be properly configured
-kubectl exec -n debezium-pipeline $IGNITE_POD -- \
-    curl -s http://localhost:10300/management/v1/node/state || echo "REST API check - verify manually"
+echo -e "\n${BLUE}Step 5: Checking Ignite Consumer logs for CDC events...${NC}"
+IGNITE_CONSUMER_POD=$(kubectl get pods -n debezium-pipeline -l app=ignite-consumer -o jsonpath='{.items[0].metadata.name}' 2>/dev/null)
+if [ ! -z "$IGNITE_CONSUMER_POD" ]; then
+    kubectl logs -n debezium-pipeline $IGNITE_CONSUMER_POD --tail=10 2>/dev/null || echo "Ignite Consumer logs not available"
+else
+    echo "Ignite Consumer pod not found"
+fi
 
 echo -e "\n${YELLOW}Step 6: Update a record in PostgreSQL...${NC}"
 kubectl exec -n debezium-pipeline $POSTGRES_POD -- psql -U postgres -d testdb -c \

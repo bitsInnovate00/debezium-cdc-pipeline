@@ -39,8 +39,7 @@ echo -e "\n${BLUE}Creating Postgres Source Connector...${NC}"
 kubectl exec -n debezium-pipeline $KAFKA_CONNECT_POD -- \
     curl -i -X POST -H "Accept:application/json" -H "Content-Type:application/json" \
     http://localhost:8083/connectors/ \
-    -d @- << EOF
-{
+    -d '{
   "name": "postgres-source-connector",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
@@ -56,22 +55,9 @@ kubectl exec -n debezium-pipeline $KAFKA_CONNECT_POD -- \
     "publication.autocreate.mode": "filtered",
     "slot.name": "debezium_slot",
     "topic.prefix": "dbserver1",
-    "schema.history.internal.kafka.bootstrap.servers": "kafka-service:9092",
-    "schema.history.internal.kafka.topic": "schema-changes.testdb",
-    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-    "key.converter.schemas.enable": "true",
-    "value.converter.schemas.enable": "true",
-    "transforms": "unwrap",
-    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-    "transforms.unwrap.drop.tombstones": "false",
-    "transforms.unwrap.delete.handling.mode": "rewrite",
-    "snapshot.mode": "initial",
-    "time.precision.mode": "adaptive",
-    "decimal.handling.mode": "double"
+    "snapshot.mode": "initial"
   }
-}
-EOF
+}'
 
 echo -e "\n${GREEN}✓ Postgres Source Connector created${NC}"
 
@@ -91,7 +77,7 @@ echo -e "\n${BLUE}To check connector status:${NC}"
 echo "kubectl exec -n debezium-pipeline $KAFKA_CONNECT_POD -- curl -s http://localhost:8083/connectors/postgres-source-connector/status | jq ."
 
 echo -e "\n${BLUE}To list Kafka topics:${NC}"
-echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- kafka-topics.sh --bootstrap-server localhost:9092 --list"
+echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- /usr/bin/kafka-topics --bootstrap-server localhost:9092 --list"
 
 echo -e "\n${BLUE}To consume messages from Kafka:${NC}"
-echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic dbserver1.public.customers --from-beginning"
+echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- /usr/bin/kafka-console-consumer --bootstrap-server localhost:9092 --topic dbserver1.public.customers --from-beginning"

@@ -30,7 +30,7 @@ spec:
         - name: IGNITE_WORK_DIR
           value: /ignite/work
         - name: JAVA_OPTS
-          value: "-Xms512m -Xmx1g -server -XX:+UseG1GC"
+          value: "-Xms1g -Xmx1536m -server -XX:+UseG1GC"
         volumeMounts:
         - name: ignite-storage
           mountPath: /ignite/work
@@ -38,10 +38,10 @@ spec:
           mountPath: /ignite/config
         resources:
           requests:
-            memory: "512Mi"
+            memory: "1Gi"
             cpu: "500m"
           limits:
-            memory: "1Gi"
+            memory: "2Gi"
             cpu: "1000m"
         livenessProbe:
           httpGet:

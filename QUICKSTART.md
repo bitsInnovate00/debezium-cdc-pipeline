@@ -71,6 +71,9 @@ kubectl apply -f kubernetes/ignite/
 kubectl wait --for=condition=ready pod -l app=ignite -n debezium-pipeline --timeout=300s
 sleep 20  # Wait for Ignite to fully initialize
 
+# 6b. Initialize Ignite cluster (REQUIRED)
+./scripts/init-ignite-cluster.sh
+
 # 7. Build and deploy Ignite Consumer
 # If using minikube:
 eval $(minikube docker-env)
@@ -171,6 +174,25 @@ IGNITE_CONSUMER_POD=$(kubectl get pods -n debezium-pipeline -l app=ignite-consum
 kubectl logs -f -n debezium-pipeline $IGNITE_CONSUMER_POD
 ```
 
+### 7. Access Ignite CLI (Optional)
+
+```bash
+# Run interactive Ignite CLI
+./scripts/ignite-cli.sh
+
+# Once in the CLI, connect to the cluster:
+connect --url http://ignite-0.ignite-service:10300
+
+# Check cluster status:
+cluster status
+
+# Run SQL queries:
+sql "SELECT * FROM customers"
+
+# Exit:
+exit
+```
+
 ## Testing the CDC Pipeline
 
 ### Insert Data
@@ -220,6 +242,45 @@ kubectl logs -f -n debezium-pipeline $IGNITE_CONSUMER_POD
 ```
 
 ## Common Issues
+
+### Issue: Ignite Consumer Can't Connect (Connection Refused on Port 10800)
+
+This happens when the Ignite cluster hasn't been initialized yet.
+
+**Solution:**
+```bash
+# Initialize the Ignite cluster
+./scripts/init-ignite-cluster.sh
+
+# Restart the ignite-consumer pod
+kubectl delete pod -n debezium-pipeline -l app=ignite-consumer
+
+# Verify cluster is active
+IGNITE_POD=$(kubectl get pods -n debezium-pipeline -l app=ignite -o jsonpath='{.items[0].metadata.name}')
+kubectl run curl-check --rm -i --image=curlimages/curl:latest --restart=Never -n debezium-pipeline -- \
+  curl -s http://ignite-0.ignite-service:10300/management/v1/cluster/state
+```
+
+**Note:** Apache Ignite 3 requires explicit cluster initialization before accepting client connections on port 10800. The REST API (port 10300) is available immediately, but the thin client protocol (port 10800) only starts after cluster initialization.
+
+### Issue: Ignite Pods Crashing (OOMKilled)
+
+If Ignite pods show `CrashLoopBackOff` or `OOMKilled` status:
+
+**Solution:**
+```bash
+# Check pod status
+kubectl get pods -n debezium-pipeline -l app=ignite
+
+# If OOMKilled, the memory limits may need adjustment
+# The deployment already has 2Gi limit, but you can increase if needed
+kubectl describe pod <ignite-pod-name> -n debezium-pipeline | grep -i oom
+```
+
+The current configuration allocates:
+- Memory request: 1Gi
+- Memory limit: 2Gi
+- JVM heap: -Xms1g -Xmx1536m
 
 ### Issue: Pods Not Starting
 

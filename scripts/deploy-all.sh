@@ -71,6 +71,11 @@ wait_for_pods "debezium-pipeline" "ignite" 2
 echo -e "${BLUE}Waiting for Ignite to fully initialize...${NC}"
 sleep 20
 
+# Initialize Ignite cluster
+echo -e "\n${BLUE}Step 6b: Initializing Ignite cluster...${NC}"
+./scripts/init-ignite-cluster.sh
+echo -e "${GREEN}✓ Ignite cluster initialized${NC}"
+
 # Step 7: Build and deploy Ignite Consumer
 echo -e "\n${BLUE}Step 7: Building and deploying Ignite Consumer...${NC}"
 
