@@ -146,7 +146,7 @@ kubectl exec -it -n debezium-pipeline <kafka-connect-pod> -- \
 View Kafka topics:
 ```bash
 kubectl exec -it -n debezium-pipeline <kafka-pod> -- \
-  kafka-topics.sh --bootstrap-server localhost:9092 --list
+  kafka-topics --bootstrap-server localhost:9092 --list
 ```
 
 ## Cleanup

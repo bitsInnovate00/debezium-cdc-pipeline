@@ -126,7 +126,7 @@ kubectl logs -f -n debezium-pipeline <ignite-consumer-pod>
 
 # Verify Kafka topics exist
 kubectl exec -n debezium-pipeline <kafka-pod> -- \
-  kafka-topics.sh --bootstrap-server localhost:9092 --list
+  kafka-topics --bootstrap-server localhost:9092 --list
 
 # Manually consume from Kafka to verify messages
 kubectl exec -n debezium-pipeline <kafka-pod> -- \
@@ -152,7 +152,7 @@ kubectl exec -n debezium-pipeline <kafka-connect-pod> -- \
 
 # Check if topic was created
 kubectl exec -n debezium-pipeline <kafka-pod> -- \
-  kafka-topics.sh --bootstrap-server localhost:9092 --list | grep dbserver1
+  kafka-topics --bootstrap-server localhost:9092 --list | grep dbserver1
 
 # Check Kafka Connect logs
 kubectl logs -f -n debezium-pipeline <kafka-connect-pod>

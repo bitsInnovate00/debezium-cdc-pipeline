@@ -75,9 +75,8 @@ sleep 20  # Wait for Ignite to fully initialize
 ./scripts/init-ignite-cluster.sh
 
 # 7. Build and deploy Ignite Consumer
-# If using minikube:
-eval $(minikube docker-env)
-docker build -t ignite-consumer:1.0 ./ignite-consumer
+# The build script automatically detects your Kubernetes environment (minikube, kind, Docker Desktop, etc.)
+./scripts/build-ignite-consumer.sh
 kubectl apply -f kubernetes/ignite-consumer/
 kubectl wait --for=condition=ready pod -l app=ignite-consumer -n debezium-pipeline --timeout=300s
 
@@ -141,7 +140,7 @@ Expected output:
 KAFKA_POD=$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}')
 
 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
-  kafka-topics.sh --bootstrap-server localhost:9092 --list | grep dbserver1
+  kafka-topics --bootstrap-server localhost:9092 --list | grep dbserver1
 ```
 
 Expected output:
@@ -162,8 +161,8 @@ kubectl exec -n debezium-pipeline $POSTGRES_POD -- \
 
 ```bash
 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
-  kafka-console-consumer.sh --bootstrap-server localhost:9092 \
-  --topic dbserver1.public.customers --from-beginning --max-messages 5
+  kafka-console-consumer --bootstrap-server localhost:9092 \
+  --topic dbserver1.public.customers --from-beginning --max-messages 20
 ```
 
 ### 6. Check Ignite Consumer Logs
@@ -314,7 +313,7 @@ kubectl exec -n debezium-pipeline $KAFKA_CONNECT_POD -- \
 ```bash
 # Check if topic exists
 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
-  kafka-topics.sh --bootstrap-server localhost:9092 --list
+  kafka-topics --bootstrap-server localhost:9092 --list
 
 # Check connector logs
 kubectl logs -f -n debezium-pipeline $KAFKA_CONNECT_POD

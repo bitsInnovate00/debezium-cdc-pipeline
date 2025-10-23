@@ -425,7 +425,7 @@ kubectl exec -i -n debezium-pipeline <postgres-pod> -- \
 ```bash
 # List topics
 kubectl exec -n debezium-pipeline <kafka-pod> -- \
-  kafka-topics.sh --bootstrap-server localhost:9092 --list
+  kafka-topics --bootstrap-server localhost:9092 --list
 
 # Backup consumer offsets
 kubectl exec -n debezium-pipeline <kafka-pod> -- \

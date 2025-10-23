@@ -26,11 +26,11 @@ kubectl exec -n debezium-pipeline $POSTGRES_POD -- psql -U postgres -d testdb -c
 
 echo -e "\n${BLUE}Step 3: Listing Kafka topics...${NC}"
 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
-    /usr/bin/kafka-topics --bootstrap-server localhost:9092 --list | grep dbserver1 || echo "No Debezium topics found yet"
+    kafka-topics --bootstrap-server localhost:9092 --list | grep dbserver1 || echo "No Debezium topics found yet"
 
 echo -e "\n${BLUE}Step 4: Consuming last 5 messages from Kafka (waiting 10 seconds)...${NC}"
 timeout 10 kubectl exec -n debezium-pipeline $KAFKA_POD -- \
-    /usr/bin/kafka-console-consumer --bootstrap-server localhost:9092 \
+    kafka-console-consumer --bootstrap-server localhost:9092 \
     --topic dbserver1.public.customers --from-beginning --max-messages 5 2>/dev/null || echo -e "${YELLOW}No messages consumed (may still be processing)${NC}"
 
 echo -e "\n${BLUE}Step 5: Checking Ignite Consumer logs for CDC events...${NC}"

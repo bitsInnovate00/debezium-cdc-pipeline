@@ -77,7 +77,7 @@ echo -e "\n${BLUE}To check connector status:${NC}"
 echo "kubectl exec -n debezium-pipeline $KAFKA_CONNECT_POD -- curl -s http://localhost:8083/connectors/postgres-source-connector/status | jq ."
 
 echo -e "\n${BLUE}To list Kafka topics:${NC}"
-echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- /usr/bin/kafka-topics --bootstrap-server localhost:9092 --list"
+echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- kafka-topics --bootstrap-server localhost:9092 --list"
 
 echo -e "\n${BLUE}To consume messages from Kafka:${NC}"
-echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- /usr/bin/kafka-console-consumer --bootstrap-server localhost:9092 --topic dbserver1.public.customers --from-beginning"
+echo "kubectl exec -n debezium-pipeline \$(kubectl get pods -n debezium-pipeline -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- kafka-console-consumer --bootstrap-server localhost:9092 --topic dbserver1.public.customers --from-beginning"
