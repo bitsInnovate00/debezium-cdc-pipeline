@@ -165,6 +165,55 @@ kubectl exec -it -n debezium-pipeline <kafka-pod> -- \
   - Configuring resource limits and requests
   - Using secrets for sensitive data
 
+---
+
+## CDC Regression Test Suite
+
+This repository includes a **CDC-Based Regression Test Framework** designed for
+airline reservation system modernisation.  It replaces manual regression testing
+by capturing Debezium CDC events during test execution and comparing them against
+approved golden baselines.
+
+### Key Capabilities
+
+- 📸 **Capture** — records all DB mutations within a named test-case window
+- 🗄️ **Baseline Store** — stores approved event snapshots in PostgreSQL
+- 🔍 **Compare** — row-level diff between baseline and new run
+- ✅ **Assert** — configurable PASS/FAIL rules with tolerance support
+- 📊 **Report** — JUnit-XML (CI/CD integration) + HTML visual diff
+
+### Quick Start
+
+```bash
+# Deploy the framework (requires existing CDC pipeline)
+make deploy-regression
+
+# Port-forward the API
+make regression-forward   # → http://localhost:8085
+
+# Capture a monolithic baseline
+SESSION_ID=$(./scripts/start-test-session.sh \
+  --name "book_domestic_flight_one_way" \
+  --env  MONOLITH)
+# ... run your test scenario ...
+./scripts/end-test-session.sh --session "$SESSION_ID"
+BASELINE_ID=$(./scripts/create-baseline.sh --session "$SESSION_ID")
+./scripts/approve-baseline.sh --baseline "$BASELINE_ID" --by "qa-lead"
+
+# Validate microservices run
+SESSION_ID=$(./scripts/start-test-session.sh \
+  --name "book_domestic_flight_one_way" \
+  --env  MICROSERVICES)
+# ... run the same test scenario against microservices ...
+./scripts/end-test-session.sh --session "$SESSION_ID"
+./scripts/compare-baselines.sh --session "$SESSION_ID"   # exit 0=PASS, 1=FAIL
+```
+
+See [REGRESSION_TESTING.md](REGRESSION_TESTING.md) for the full technical guide
+and [REGRESSION_TEST_PRD.md](REGRESSION_TEST_PRD.md) for the Product Requirements Document.
+
+---
+
 ## Troubleshooting
 
 ### Pods not starting

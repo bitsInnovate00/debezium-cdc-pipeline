@@ -30,6 +30,10 @@
 - **[CONFIGURATION.md](CONFIGURATION.md)** - Configuration options for all components
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Debugging and problem resolution
 
+### Regression Testing
+- **[REGRESSION_TEST_PRD.md](REGRESSION_TEST_PRD.md)** - Product Requirements Document for the CDC regression suite
+- **[REGRESSION_TESTING.md](REGRESSION_TESTING.md)** - Technical guide and quick start for regression testing
+
 ### Build & Deployment
 - **[Makefile](Makefile)** - Make commands for common operations
 - **[scripts/deploy-all.sh](scripts/deploy-all.sh)** - Automated deployment
@@ -43,7 +47,7 @@
 ```
 debezium/
 │
-├── 📘 Documentation (7 markdown files)
+├── 📘 Documentation (9 markdown files)
 │   ├── INDEX.md                     ← You are here
 │   ├── PROJECT_OVERVIEW.md          ← Start here
 │   ├── README.md                    ← Main documentation
@@ -51,15 +55,18 @@ debezium/
 │   ├── ARCHITECTURE.md              ← System architecture
 │   ├── CONFIGURATION.md             ← Configuration reference
 │   ├── TROUBLESHOOTING.md           ← Problem solving
-│   └── SUMMARY.md                   ← Project summary
+│   ├── SUMMARY.md                   ← Project summary
+│   ├── REGRESSION_TEST_PRD.md       ← Regression suite PRD
+│   └── REGRESSION_TESTING.md        ← Regression testing guide
 │
-├── 🐳 Kubernetes (14 YAML files)
+├── 🐳 Kubernetes (18 YAML files)
 │   ├── namespace.yaml               ← Kubernetes namespace
 │   ├── postgres/                    ← PostgreSQL database
 │   ├── kafka/                       ← Kafka & Zookeeper
 │   ├── kafka-connect/               ← Kafka Connect + Debezium
 │   ├── ignite/                      ← Apache Ignite 3
-│   └── ignite-consumer/             ← Custom consumer app
+│   ├── ignite-consumer/             ← Custom consumer app
+│   └── regression-test/             ← CDC regression test framework
 │
 ├── 🔌 Connectors (2 JSON files)
 │   ├── postgres-source-connector.json    ← Debezium config
@@ -71,12 +78,19 @@ debezium/
 │   │   ├── pom.xml                  ← Maven build
 │   │   └── src/main/java/...        ← Java source code
 │
-├── 🔧 Scripts (5 shell scripts)
-│   ├── scripts/deploy-all.sh        ← Deploy everything
-│   ├── scripts/create-connectors.sh ← Create connectors
-│   ├── scripts/test-pipeline.sh     ← Test the system
-│   ├── scripts/monitor.sh           ← Monitor components
-│   └── scripts/cleanup.sh           ← Remove everything
+├── 🔧 Scripts (12 shell scripts)
+│   ├── scripts/deploy-all.sh               ← Deploy everything
+│   ├── scripts/create-connectors.sh        ← Create connectors
+│   ├── scripts/test-pipeline.sh            ← Test the system
+│   ├── scripts/monitor.sh                  ← Monitor components
+│   ├── scripts/cleanup.sh                  ← Remove everything
+│   ├── scripts/deploy-regression-framework.sh ← Deploy regression framework
+│   ├── scripts/start-test-session.sh       ← Start capture session
+│   ├── scripts/end-test-session.sh         ← End capture session
+│   ├── scripts/create-baseline.sh          ← Create baseline
+│   ├── scripts/approve-baseline.sh         ← Approve baseline
+│   ├── scripts/compare-baselines.sh        ← Compare vs baseline
+│   └── scripts/generate-report.sh         ← Download reports
 │
 └── ⚙️ Build Tools
     ├── Makefile                     ← Make commands

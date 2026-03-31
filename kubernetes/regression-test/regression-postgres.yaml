@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: regression-postgres
+  namespace: debezium-pipeline
+  labels:
+    app: regression-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: regression-postgres
+  template:
+    metadata:
+      labels:
+        app: regression-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: regression_db
+            - name: POSTGRES_USER
+              value: regression
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: regression-test-secret
+                  key: POSTGRES_PASSWORD
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          volumeMounts:
+            - name: regression-postgres-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: regression-postgres-data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: regression-postgres
+  namespace: debezium-pipeline
+spec:
+  selector:
+    app: regression-postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
