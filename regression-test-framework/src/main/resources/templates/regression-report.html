@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="'CDC Regression Report — ' + ${result.testCaseName}">CDC Regression Report</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+               background: #f4f6f8; color: #1a1a2e; }
+        header { background: #16213e; color: #e8e8e8; padding: 20px 32px;
+                 display: flex; align-items: center; gap: 16px; }
+        header h1 { font-size: 1.4rem; font-weight: 600; }
+        .badge { padding: 4px 14px; border-radius: 20px; font-size: .8rem; font-weight: 700; }
+        .badge-pass { background: #28a745; color: white; }
+        .badge-fail { background: #dc3545; color: white; }
+        main { max-width: 1200px; margin: 32px auto; padding: 0 24px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+                margin-bottom: 24px; overflow: hidden; }
+        .card-header { background: #0f3460; color: white; padding: 14px 24px; font-weight: 600; }
+        .card-body { padding: 20px 24px; }
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 16px; }
+        .meta-item label { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em;
+                           color: #666; display: block; margin-bottom: 4px; }
+        .meta-item span { font-size: 1rem; font-weight: 500; }
+        .stats-row { display: flex; gap: 16px; flex-wrap: wrap; }
+        .stat { text-align: center; flex: 1; min-width: 100px; padding: 16px;
+                border-radius: 8px; background: #f8f9fa; }
+        .stat .value { font-size: 2rem; font-weight: 700; }
+        .stat .label { font-size: .75rem; color: #666; margin-top: 4px; }
+        .stat.ok    .value { color: #28a745; }
+        .stat.warn  .value { color: #ffc107; }
+        .stat.danger .value { color: #dc3545; }
+        table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+        th { background: #e9ecef; padding: 10px 12px; text-align: left;
+             font-size: .75rem; text-transform: uppercase; letter-spacing: .04em; }
+        td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #f8f9fa; }
+        .tag { display: inline-block; background: #e9ecef; border-radius: 4px;
+               padding: 2px 8px; font-size: .75rem; margin-right: 4px; }
+        .diff-MISSING_EVENT  { color: #dc3545; font-weight: 600; }
+        .diff-EXTRA_EVENT    { color: #6f42c1; font-weight: 600; }
+        .diff-VALUE_MISMATCH { color: #fd7e14; font-weight: 600; }
+        .diff-ORDER_MISMATCH { color: #6c757d; font-weight: 600; }
+        .code { font-family: 'SF Mono', 'Fira Code', monospace; font-size: .82rem;
+                background: #f8f9fa; padding: 2px 6px; border-radius: 3px; word-break: break-all; }
+        footer { text-align: center; padding: 24px; color: #999; font-size: .8rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1 th:text="'CDC Regression — ' + ${result.testCaseName}">CDC Regression</h1>
+        <div style="font-size:.82rem; margin-top:4px; color:#aaa"
+             th:text="'Session ' + ${result.sessionId}">Session ID</div>
+    </div>
+    <span th:class="'badge badge-' + ${report.verdict.name().toLowerCase()}"
+          th:text="${report.verdict}">PASS</span>
+</header>
+
+<main>
+
+    <!-- Metadata Card -->
+    <div class="card">
+        <div class="card-header">Test Details</div>
+        <div class="card-body">
+            <div class="meta-grid">
+                <div class="meta-item">
+                    <label>Test Case</label>
+                    <span th:text="${result.testCaseName}">—</span>
+                </div>
+                <div class="meta-item">
+                    <label>Session ID</label>
+                    <span class="code" th:text="${result.sessionId}">—</span>
+                </div>
+                <div class="meta-item">
+                    <label>Baseline ID</label>
+                    <span class="code" th:text="${result.baselineId}">—</span>
+                </div>
+                <div class="meta-item">
+                    <label>Compared At</label>
+                    <span th:text="${result.comparedAt}">—</span>
+                </div>
+                <div class="meta-item">
+                    <label>Generated At</label>
+                    <span th:text="${generatedAt}">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Card -->
+    <div class="card">
+        <div class="card-header">Comparison Statistics</div>
+        <div class="card-body">
+            <div class="stats-row">
+                <div th:class="'stat ' + (${result.missingEventCount} == 0 ? 'ok' : 'danger')">
+                    <div class="value" th:text="${result.baselineEventCount}">0</div>
+                    <div class="label">Baseline Events</div>
+                </div>
+                <div class="stat ok">
+                    <div class="value" th:text="${result.sessionEventCount}">0</div>
+                    <div class="label">Session Events</div>
+                </div>
+                <div th:class="'stat ' + (${result.missingEventCount} == 0 ? 'ok' : 'danger')">
+                    <div class="value" th:text="${result.missingEventCount}">0</div>
+                    <div class="label">Missing Events</div>
+                </div>
+                <div th:class="'stat ' + (${result.extraEventCount} == 0 ? 'ok' : 'warn')">
+                    <div class="value" th:text="${result.extraEventCount}">0</div>
+                    <div class="label">Extra Events</div>
+                </div>
+                <div th:class="'stat ' + (${result.valueMismatchCount} == 0 ? 'ok' : 'danger')">
+                    <div class="value" th:text="${result.valueMismatchCount}">0</div>
+                    <div class="label">Value Mismatches</div>
+                </div>
+                <div th:class="'stat ' + (${result.orderMismatchCount} == 0 ? 'ok' : 'warn')">
+                    <div class="value" th:text="${result.orderMismatchCount}">0</div>
+                    <div class="label">Order Mismatches</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Diff Detail Card (only if there are diffs) -->
+    <div class="card" th:if="${report.diffs != null and !report.diffs.empty}">
+        <div class="card-header" th:text="'Differences (' + ${report.totalDiffs} + ')'">Differences</div>
+        <div class="card-body" style="padding:0">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Table</th>
+                        <th>Primary Key</th>
+                        <th>Operation</th>
+                        <th>Column</th>
+                        <th>Baseline Value</th>
+                        <th>Session Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="diff : ${report.diffs}">
+                        <td>
+                            <span th:class="'diff-' + ${diff.type}"
+                                  th:text="${diff.type}">TYPE</span>
+                        </td>
+                        <td class="code" th:text="${diff.tableName}">—</td>
+                        <td class="code" th:text="${diff.primaryKey}">—</td>
+                        <td th:text="${diff.operation}">—</td>
+                        <td class="code" th:text="${diff.column}">—</td>
+                        <td class="code" th:text="${diff.baselineValue}">—</td>
+                        <td class="code" th:text="${diff.sessionValue}">—</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PASS message when no diffs -->
+    <div class="card" th:if="${report.diffs == null or report.diffs.empty}">
+        <div class="card-body" style="text-align:center; padding:40px; color:#28a745; font-size:1.2rem">
+            ✅ All CDC events match the approved baseline — no differences found.
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <p>Generated by CDC Regression Test Framework &bull;
+       <span th:text="${generatedAt}">—</span></p>
+</footer>
+
+</body>
+</html>

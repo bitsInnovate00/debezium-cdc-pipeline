@@ -1,4 +1,6 @@
-.PHONY: help deploy clean test monitor status logs build-consumer connectors check-prereqs
+.PHONY: help deploy clean test monitor status logs build-consumer connectors check-prereqs \
+        deploy-regression build-regression regression-forward \
+        regression-status regression-logs regression-start-session regression-compare
 
 # Default target
 help:
@@ -29,6 +31,13 @@ help:
 	@echo "Database Operations:"
 	@echo "  make psql             - Connect to PostgreSQL"
 	@echo "  make insert-test      - Insert test data"
+	@echo ""
+	@echo "CDC Regression Testing:"
+	@echo "  make deploy-regression  - Deploy the CDC regression test framework"
+	@echo "  make build-regression   - Build regression framework Docker image"
+	@echo "  make regression-forward - Port-forward regression API to localhost:8085"
+	@echo "  make regression-status  - Show regression framework pod status"
+	@echo "  make regression-logs    - Tail regression framework logs"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean            - Delete all resources"
@@ -134,6 +143,40 @@ insert-test:
 		psql -U postgres -d testdb -c "INSERT INTO customers (name, email) VALUES ('Test User', 'test-$$(date +%s)@example.com');"
 	@echo "✓ Test data inserted"
 
+# ============================================================
+# CDC Regression Test Framework targets
+# ============================================================
+
+# Build the regression test framework Docker image
+build-regression:
+	@echo "Building CDC regression test framework Docker image..."
+	@if command -v minikube >/dev/null 2>&1 && minikube status >/dev/null 2>&1; then \
+		eval $$(minikube docker-env); \
+	fi
+	@docker build -t regression-test-framework:latest ./regression-test-framework/
+
+# Deploy regression test framework to Kubernetes
+deploy-regression: check-prereqs build-regression
+	@echo "Deploying CDC regression test framework..."
+	@./scripts/deploy-regression-framework.sh
+
+# Port-forward the regression framework REST API
+regression-forward:
+	@echo "Forwarding regression framework to localhost:8085"
+	@kubectl port-forward -n debezium-pipeline svc/regression-test-framework 8085:8085
+
+# Show regression framework pod status
+regression-status:
+	@echo "=== Regression Framework Pods ==="
+	@kubectl get pods -n debezium-pipeline -l app=regression-test-framework
+	@kubectl get pods -n debezium-pipeline -l app=regression-postgres
+
+# Tail regression framework logs
+regression-logs:
+	@kubectl logs -f -n debezium-pipeline \
+		$$(kubectl get pods -n debezium-pipeline -l app=regression-test-framework -o jsonpath='{.items[0].metadata.name}')
+
+# ============================================================
 # Clean up all resources
 clean:
 	@echo "Cleaning up..."

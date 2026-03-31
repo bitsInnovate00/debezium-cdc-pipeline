@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: regression-test-config
+  namespace: debezium-pipeline
+data:
+  POSTGRES_HOST: "regression-postgres"
+  POSTGRES_DB: "regression_db"
+  POSTGRES_USER: "regression"
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+  SERVER_PORT: "8085"
